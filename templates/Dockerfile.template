@@ -1,0 +1,12 @@
+FROM anapsix/alpine-java:8
+MAINTAINER HAMBURG WASSER
+VOLUME ["/logs"]
+EXPOSE 8080
+EXPOSE 10001
+ENV APP_NAME=${appName}
+ENV FULL_LOGGING=true
+
+ENTRYPOINT ["java", "-Djava.security.egd=file:/dev/./urandom", "-Xmx${maxMem}", "-XX:MaxMetaspaceSize=128m", "-XX:NativeMemoryTracking=summary","-agentpath:/libyjpagent.so=disableall", "-jar", "${jarName}"]
+COPY libyjpagent.so /libyjpagent.so
+
+COPY ${jarName} /${jarName}

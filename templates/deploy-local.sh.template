@@ -1,0 +1,9 @@
+#!/bin/sh
+
+\$(dirname "\$0")/build-docker-image.sh
+
+echo "stop and remove container: ${localContainerName}"
+docker stop ${localContainerName} >/dev/null || true && docker rm -v ${localContainerName} >/dev/null || true
+
+echo "start container: ${localContainerName} mit imageName: ${imageName}"
+docker run -d --name ${localContainerName} -e "SPRING_PROFILES_ACTIVE=test" -e "FULL_LOGGING=false" ${localPortMappings} ${imageName}

@@ -1,0 +1,6 @@
+#!/bin/sh
+
+\$(dirname "\$0")/build-docker-image.sh
+
+docker tag ${imageName} ${registryUrl}/${imageName}
+docker push ${registryUrl}/${imageName}

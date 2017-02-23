@@ -1,0 +1,30 @@
+apply plugin: 'groovy'
+apply plugin: 'maven-publish'
+
+group = 'de.e2.docker'
+
+dependencies {
+    compile gradleApi()
+    compile localGroovy()
+}
+
+task packTemplates (type: Zip, group: 'publishing') {
+    baseName "docker-templates"
+    from file('templates')
+}
+
+publishing {
+    publications {
+        plugin(MavenPublication) {
+            from components.java
+            artifactId 'docker-plugin'
+            version '3.0.0'
+        }
+        templates(MavenPublication) {
+            artifactId 'docker-templates'
+            version '3.0.0'
+
+            artifact packTemplates
+        }
+    }
+}

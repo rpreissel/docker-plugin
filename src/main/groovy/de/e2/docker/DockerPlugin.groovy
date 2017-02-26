@@ -38,38 +38,43 @@ class DockerPlugin implements Plugin<Project> {
                 boolean localBuild = project.docker.jenkinsBuildNumber == DockerPluginExtension.LOCAL_BUILD_NUMBER
 
                 List<String> localExcludeContent = readLocalExcludePatterns(project)
-                project.configurations.docker.forEach { file ->
-                    def srcFiles = isArchive(file) ?  project.zipTree(file) : project.fileTree(file)
+                def copyTemplatesClosure=this.&copyTemplates.curry(project, templateMap, localBuild, localExcludeContent);
 
-                    project.copy {
-                        from srcFiles
-                        into project.extensions.docker.buildDir
-
-                        expand templateMap
-                        include '*' + templatSuffix
-                        if(localBuild) {
-                            exclude localExcludeContent
-                        }
-                        exclude localExcludeFileName
-                        rename renameClosure
-                    }
-
-                    project.copy {
-                        from srcFiles
-                        into project.extensions.docker.buildDir
-                        exclude '*' + templatSuffix
-                        if(localBuild) {
-                            exclude localExcludeContent
-                        }
-                        exclude localExcludeFileName
-                    }
-                }
+                project.configurations.docker.filter {file -> isArchive(file)} forEach copyTemplatesClosure
+                project.configurations.docker.filter {file -> !isArchive(file)} forEach copyTemplatesClosure
             }
         }
     }
 
+    private copyTemplates(project, templateMap, boolean localBuild, List<String> localExcludeContent, file) {
+        def srcFiles = isArchive(file) ? project.zipTree(file) : project.fileTree(file)
 
-    private boolean isArchive(File file) {
+        project.copy {
+            from srcFiles
+            into project.extensions.docker.buildDir
+
+            expand templateMap
+            include '*' + templatSuffix
+            if (localBuild) {
+                exclude localExcludeContent
+            }
+            exclude localExcludeFileName
+            rename renameClosure
+        }
+
+        project.copy {
+            from srcFiles
+            into project.extensions.docker.buildDir
+            exclude '*' + templatSuffix
+            if (localBuild) {
+                exclude localExcludeContent
+            }
+            exclude localExcludeFileName
+        }
+    }
+
+
+    private isArchive(File file) {
         file.getName().endsWith(".jar") || file.getName().endsWith(".zip")
     }
 
@@ -97,7 +102,12 @@ class DockerPlugin implements Plugin<Project> {
                     return v instanceof Serializable
                 })
 
-        def properties = rawProperties + rawProperties.extras
+        def rawExtraProperties = convertValuesToStrings(
+                project.docker.ext.properties.findAll { k, v ->
+                    return v instanceof Serializable
+                })
+
+        def properties = rawProperties + rawExtraProperties
         return properties
     }
 

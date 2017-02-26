@@ -35,7 +35,4 @@ class DockerPluginExtension {
     def prodContainerName = "${-> appName}-prod"
     final def jenkinsBuildNumber = "${-> System.env.BUILD_NUMBER ?: LOCAL_BUILD_NUMBER}"
     final def tagVersion = "${-> System.env.BRANCH_NAME ?: System.properties['user.name']}-${-> jenkinsBuildNumber}"
-
-
-    Map extras = [:]
 }
